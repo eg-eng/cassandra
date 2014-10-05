@@ -42,7 +42,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         {
             if (logger.isTraceEnabled())
                 logger.trace("Ignoring GossipDigestSynMessage because gossip is disabled");
-            return;
+            //return;
         }
 
         GossipDigestSyn gDigestMessage = message.payload;
