@@ -1185,24 +1185,32 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 digestSynMessage,
                 GossipDigestSyn.serializer);
         inShadowRound = true;
-        for (InetAddress seed : seeds)
-            MessagingService.instance().sendOneWay(message, seed);
-        int slept = 0;
-        try
-        {
-            while (true)
+        int retry_shadow = 0;
+        while (true) {
+            for (InetAddress seed : seeds)
+                MessagingService.instance().sendOneWay(message, seed);
+            int slept = 0;
+            try
             {
-                Thread.sleep(1000);
-                if (!inShadowRound)
-                    break;
-                slept += 1000;
-                if (slept > StorageService.RING_DELAY * 5)
-                    throw new RuntimeException("Unable to gossip with any seeds");
+                while (true)
+                {
+                    Thread.sleep(1000);
+                    if (!inShadowRound)
+                        return;
+                    slept += 1000;
+                    if (slept > StorageService.RING_DELAY * 5) {
+                        if (retry_shadow >= 3) 
+                            throw new RuntimeException("Unable to gossip with any seeds");
+                        logger.info("ShadowRound failed, retry " + retry_shadow);
+                        retry_shadow++;
+                        break;
+                    }
+                }
             }
-        }
-        catch (InterruptedException wtf)
-        {
-            throw new RuntimeException(wtf);
+            catch (InterruptedException wtf)
+            {
+                throw new RuntimeException(wtf);
+            }
         }
     }
 
