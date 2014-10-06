@@ -1196,7 +1196,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 if (!inShadowRound)
                     break;
                 slept += 1000;
-                if (slept > StorageService.RING_DELAY)
+                if (slept > StorageService.RING_DELAY * 5)
                     throw new RuntimeException("Unable to gossip with any seeds");
             }
         }
