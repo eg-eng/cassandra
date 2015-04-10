@@ -435,7 +435,7 @@ public class SecondaryIndexManager
             else
             {
                 for (Column column : cf)
-                    if (index.indexes(column.name()))
+                    if (column.isLive(System.currentTimeMillis()) && index.indexes(column.name()))
                         ((PerColumnSecondaryIndex) index).insert(key, column);
             }
         }
@@ -465,7 +465,7 @@ public class SecondaryIndexManager
                 }
                 else
                 {
-                    ((PerColumnSecondaryIndex) index).delete(key.key, column);
+                    ((PerColumnSecondaryIndex) index).deleteForCleanup(key.key, column);
                 }
             }
         }
@@ -574,8 +574,10 @@ public class SecondaryIndexManager
 
     public boolean validate(Column column)
     {
-        SecondaryIndex index = getIndexForColumn(column.name());
-        return index == null || index.validate(column);
+        for (SecondaryIndex index : indexFor(column.name()))
+            if (!index.validate(column))
+                return false;
+        return true;
     }
 
     public static interface Updater
@@ -618,7 +620,7 @@ public class SecondaryIndexManager
         {
             if (oldColumn.equals(column))
                 return;
-            
+
             for (SecondaryIndex index : indexFor(column.name()))
             {
                 if (index instanceof PerColumnSecondaryIndex)
